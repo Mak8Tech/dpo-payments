@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   AlertCircle,
   Check,
@@ -8,13 +8,39 @@ import {
   Smartphone,
 } from "lucide-react";
 
-export const DpoTransactionTable = ({
+type TransactionStatus =
+  | "success"
+  | "pending"
+  | "processing"
+  | "failed"
+  | "cancelled"
+  | "refunded";
+
+interface Transaction {
+  id: string;
+  reference: string;
+  customer_name?: string;
+  customer_email?: string;
+  formatted_amount: string;
+  status: TransactionStatus;
+  created_at: string;
+  amount: number;
+  refunded_amount: number;
+}
+
+interface DpoTransactionTableProps {
+  transactions?: Transaction[];
+  onRefund?: (transaction: Transaction) => void;
+  onCancel?: (transaction: Transaction) => void;
+}
+
+export const DpoTransactionTable: React.FC<DpoTransactionTableProps> = ({
   transactions = [],
   onRefund,
   onCancel,
 }) => {
-  const getStatusColor = (status) => {
-    const colors = {
+  const getStatusColor = (status: TransactionStatus): string => {
+    const colors: Record<TransactionStatus, string> = {
       success: "bg-green-100 text-green-800",
       pending: "bg-yellow-100 text-yellow-800",
       processing: "bg-blue-100 text-blue-800",

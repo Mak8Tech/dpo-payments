@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   AlertCircle,
   Check,
@@ -8,15 +8,49 @@ import {
   Smartphone,
 } from "lucide-react";
 
-export const DpoSubscriptionSignup = ({
+type BillingFrequency = "monthly" | "quarterly" | "yearly";
+
+interface SubscriptionPlan {
+  id: string;
+  name: string;
+  amount: number;
+  currency: string;
+  features?: string[];
+}
+
+interface SubscriptionFormData {
+  customer_email: string;
+  customer_name: string;
+  customer_phone: string;
+  country: string;
+  frequency: BillingFrequency;
+  start_date: string;
+}
+
+interface SubscriptionResponse {
+  success: boolean;
+  error?: string;
+}
+
+interface DpoSubscriptionSignupProps {
+  plans?: SubscriptionPlan[];
+  defaultCountry?: string;
+  onSuccess?: (data: SubscriptionResponse) => void;
+  onError?: (error: Error) => void;
+  apiEndpoint?: string;
+}
+
+export const DpoSubscriptionSignup: React.FC<DpoSubscriptionSignupProps> = ({
   plans = [],
   defaultCountry = "ZM",
   onSuccess,
   onError,
   apiEndpoint = "/api/dpo/subscriptions",
 }) => {
-  const [selectedPlan, setSelectedPlan] = useState(null);
-  const [formData, setFormData] = useState({
+  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(
+    null
+  );
+  const [formData, setFormData] = useState<SubscriptionFormData>({
     customer_email: "",
     customer_name: "",
     customer_phone: "",
@@ -25,10 +59,12 @@ export const DpoSubscriptionSignup = ({
     start_date: new Date().toISOString().split("T")[0],
   });
 
-  const [processing, setProcessing] = useState(false);
-  const [error, setError] = useState("");
+  const [processing, setProcessing] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>
+  ): Promise<void> => {
     e.preventDefault();
 
     if (!selectedPlan) {
@@ -53,7 +89,7 @@ export const DpoSubscriptionSignup = ({
         }),
       });
 
-      const data = await response.json();
+      const data: SubscriptionResponse = await response.json();
 
       if (data.success) {
         if (onSuccess) {
@@ -63,14 +99,20 @@ export const DpoSubscriptionSignup = ({
         throw new Error(data.error || "Subscription creation failed");
       }
     } catch (err) {
-      setError(err.message);
-      if (onError) onError(err);
+      const errorMessage =
+        err instanceof Error ? err.message : "An error occurred";
+      setError(errorMessage);
+      if (onError)
+        onError(err instanceof Error ? err : new Error(errorMessage));
     } finally {
       setProcessing(false);
     }
   };
 
-  const handleChange = (field, value) => {
+  const handleChange = (
+    field: keyof SubscriptionFormData,
+    value: string
+  ): void => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -187,7 +229,9 @@ export const DpoSubscriptionSignup = ({
             </label>
             <select
               value={formData.frequency}
-              onChange={(e) => handleChange("frequency", e.target.value)}
+              onChange={(e) =>
+                handleChange("frequency", e.target.value as BillingFrequency)
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <option value="monthly">Monthly</option>

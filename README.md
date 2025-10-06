@@ -41,7 +41,7 @@ composer require mak8tech/dpo-payments
 ### 2. Publish Configuration
 
 ```bash
-php artisan vendor:publish --provider="Mak8Tech\DpoPayments\DpoPaymentServiceProvider" --tag="dpo-config"
+php artisan vendor:publish --provider="Mak8Tech\DpoPayments\DpoPaymentServiceProvider"
 ```
 
 ### 3. Configure Environment Variables

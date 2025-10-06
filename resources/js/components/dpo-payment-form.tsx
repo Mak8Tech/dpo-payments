@@ -8,8 +8,43 @@ import {
   Smartphone,
 } from "lucide-react";
 
-// Payment Form Component
-export const DpoPaymentForm = ({
+interface Country {
+  name: string;
+  currency: string;
+  mobile_providers?: string[];
+}
+
+interface CountriesData {
+  [countryCode: string]: Country;
+}
+
+interface PaymentFormData {
+  amount: number;
+  country: string;
+  currency: string;
+  customer_email: string;
+  customer_name: string;
+  customer_phone: string;
+  payment_method: string;
+  description: string;
+}
+
+interface PaymentResponse {
+  success: boolean;
+  payment_url?: string;
+  error?: string;
+}
+
+interface DpoPaymentFormProps {
+  amount?: number;
+  defaultCountry?: string;
+  defaultCurrency?: string;
+  onSuccess?: (data: PaymentResponse) => void;
+  onError?: (error: Error) => void;
+  apiEndpoint?: string;
+}
+
+export const DpoPaymentForm: React.FC<DpoPaymentFormProps> = ({
   amount: initialAmount = 0,
   defaultCountry = "ZM",
   defaultCurrency = "ZMW",
@@ -17,7 +52,7 @@ export const DpoPaymentForm = ({
   onError,
   apiEndpoint = "/api/dpo/payments",
 }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<PaymentFormData>({
     amount: initialAmount,
     country: defaultCountry,
     currency: defaultCurrency,
@@ -28,10 +63,10 @@ export const DpoPaymentForm = ({
     description: "Payment",
   });
 
-  const [countries, setCountries] = useState({});
-  const [mobileProviders, setMobileProviders] = useState([]);
-  const [processing, setProcessing] = useState(false);
-  const [error, setError] = useState("");
+  const [countries, setCountries] = useState<CountriesData>({});
+  const [mobileProviders, setMobileProviders] = useState<string[]>([]);
+  const [processing, setProcessing] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
     fetchCountries();
@@ -47,7 +82,7 @@ export const DpoPaymentForm = ({
     }
   }, [formData.country, countries]);
 
-  const fetchCountries = async () => {
+  const fetchCountries = async (): Promise<void> => {
     try {
       const response = await fetch("/api/dpo/countries");
       const data = await response.json();
@@ -57,7 +92,9 @@ export const DpoPaymentForm = ({
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>
+  ): Promise<void> => {
     e.preventDefault();
     setProcessing(true);
     setError("");
@@ -71,7 +108,7 @@ export const DpoPaymentForm = ({
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
+      const data: PaymentResponse = await response.json();
 
       if (data.success && data.payment_url) {
         if (onSuccess) {
@@ -83,18 +120,24 @@ export const DpoPaymentForm = ({
         throw new Error(data.error || "Payment initialization failed");
       }
     } catch (err) {
-      setError(err.message);
-      if (onError) onError(err);
+      const errorMessage =
+        err instanceof Error ? err.message : "An error occurred";
+      setError(errorMessage);
+      if (onError)
+        onError(err instanceof Error ? err : new Error(errorMessage));
     } finally {
       setProcessing(false);
     }
   };
 
-  const handleChange = (field, value) => {
+  const handleChange = (
+    field: keyof PaymentFormData,
+    value: string | number
+  ): void => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const currencySymbol =
+  const currencySymbol: string =
     countries[formData.country]?.currency || formData.currency;
 
   return (

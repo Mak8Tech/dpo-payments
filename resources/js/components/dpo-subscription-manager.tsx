@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { JSX } from "react";
 import {
   AlertCircle,
   Check,
@@ -8,21 +8,47 @@ import {
   Smartphone,
 } from "lucide-react";
 
-export const DpoSubscriptionManager = ({
+type SubscriptionStatus = "active" | "paused" | "cancelled" | "expired";
+
+interface Subscription {
+  id: string;
+  description?: string;
+  subscription_reference: string;
+  status: SubscriptionStatus;
+  formatted_amount: string;
+  frequency: string;
+  next_billing_date?: string;
+  currency: string;
+  total_paid: number;
+}
+
+interface StatusBadgeConfig {
+  color: string;
+  label: string;
+}
+
+interface DpoSubscriptionManagerProps {
+  subscriptions?: Subscription[];
+  onCancel?: (subscription: Subscription) => void;
+  onPause?: (subscription: Subscription) => void;
+  onResume?: (subscription: Subscription) => void;
+}
+
+export const DpoSubscriptionManager: React.FC<DpoSubscriptionManagerProps> = ({
   subscriptions = [],
   onCancel,
   onPause,
   onResume,
 }) => {
-  const getStatusBadge = (status) => {
-    const configs = {
+  const getStatusBadge = (status: SubscriptionStatus): JSX.Element => {
+    const configs: Record<SubscriptionStatus, StatusBadgeConfig> = {
       active: { color: "bg-green-100 text-green-800", label: "Active" },
       paused: { color: "bg-yellow-100 text-yellow-800", label: "Paused" },
       cancelled: { color: "bg-red-100 text-red-800", label: "Cancelled" },
       expired: { color: "bg-gray-100 text-gray-800", label: "Expired" },
     };
 
-    const config = configs[status] || configs.expired;
+    const config: StatusBadgeConfig = configs[status] || configs.expired;
     return (
       <span
         className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${config.color}`}

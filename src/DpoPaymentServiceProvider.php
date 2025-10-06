@@ -99,15 +99,15 @@ class DpoPaymentServiceProvider extends ServiceProvider
             ], 'dpo-react');
 
             // Publish assets
-            $this->publishes([
-                __DIR__ . '/../resources/css' => public_path('vendor/dpo/css'),
-                __DIR__ . '/../dist' => public_path('vendor/dpo/js'),
-            ], 'dpo-assets');
+            // $this->publishes([
+            //     __DIR__ . '/../resources/css' => public_path('vendor/dpo/css'),
+            //     __DIR__ . '/../dist' => public_path('vendor/dpo/js'),
+            // ], 'dpo-assets');
 
             // Publish language files
-            $this->publishes([
-                __DIR__ . '/../resources/lang' => resource_path('lang/vendor/dpo'),
-            ], 'dpo-lang');
+            // $this->publishes([
+            //     __DIR__ . '/../resources/lang' => resource_path('lang/vendor/dpo'),
+            // ], 'dpo-lang');
         }
 
         // Register view components

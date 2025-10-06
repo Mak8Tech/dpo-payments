@@ -6,12 +6,42 @@ import {
   Loader2,
   CreditCard,
   Smartphone,
+  LucideIcon,
 } from "lucide-react";
 
-export const DpoPaymentStatus = ({ reference, autoRefresh = true }) => {
-  const [status, setStatus] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+type PaymentStatus = "success" | "pending" | "failed" | "cancelled";
+
+interface Transaction {
+  reference: string;
+  status: PaymentStatus;
+  formatted_amount: string;
+  customer_email?: string;
+  dpo_result_explanation?: string;
+}
+
+interface StatusResponse {
+  transaction: Transaction;
+  error?: string;
+}
+
+interface StatusConfig {
+  color: string;
+  icon: LucideIcon;
+  message: string;
+}
+
+interface DpoPaymentStatusProps {
+  reference: string;
+  autoRefresh?: boolean;
+}
+
+export const DpoPaymentStatus: React.FC<DpoPaymentStatusProps> = ({
+  reference,
+  autoRefresh = true,
+}) => {
+  const [status, setStatus] = useState<Transaction | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
     if (reference) {
@@ -24,10 +54,10 @@ export const DpoPaymentStatus = ({ reference, autoRefresh = true }) => {
     }
   }, [reference, autoRefresh, status?.status]);
 
-  const fetchStatus = async () => {
+  const fetchStatus = async (): Promise<void> => {
     try {
       const response = await fetch(`/api/dpo/payments/${reference}/status`);
-      const data = await response.json();
+      const data: StatusResponse = await response.json();
 
       if (data.error) {
         throw new Error(data.error);
@@ -35,7 +65,9 @@ export const DpoPaymentStatus = ({ reference, autoRefresh = true }) => {
 
       setStatus(data.transaction);
     } catch (err) {
-      setError(err.message);
+      const errorMessage =
+        err instanceof Error ? err.message : "An error occurred";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -60,7 +92,7 @@ export const DpoPaymentStatus = ({ reference, autoRefresh = true }) => {
     );
   }
 
-  const statusConfig = {
+  const statusConfig: Record<PaymentStatus, StatusConfig> = {
     success: {
       color: "green",
       icon: Check,
@@ -83,7 +115,8 @@ export const DpoPaymentStatus = ({ reference, autoRefresh = true }) => {
     },
   };
 
-  const config = statusConfig[status?.status] || statusConfig.pending;
+  const config: StatusConfig =
+    statusConfig[status?.status as PaymentStatus] || statusConfig.pending;
   const Icon = config.icon;
 
   return (
